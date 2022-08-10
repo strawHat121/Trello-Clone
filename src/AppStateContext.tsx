@@ -1,4 +1,5 @@
-import {createContext} from "react"
+import React, {createContext, useReducer, useContext} from "react"
+import uuid from 'uuid'
 
 interface Task {
     id: string,
@@ -16,7 +17,17 @@ export interface AppState {
 }
 
 interface AppStateContextProps {
-    statee: AppState
+    state: AppState
+}
+
+type Action =
+| {
+type: "ADD_LIST"
+payload: string
+}
+| {
+type: "ADD_TASK"
+payload: { text: string; taskId: string }
 }
 
 const AppStateContext = createContext<AppStateContextProps>({} as AppStateContextProps)
@@ -39,4 +50,37 @@ const appData : AppState = {
         tasks: [{ id: "c3", text: "Begin to use static typing" }]
 }
 ]
+}
+
+const appStateReducer = (state: AppState, action: Action): AppState => {
+    switch(action.type) {
+        case "ADD_LIST": {
+            return {
+                ...state,
+                lists: [
+                    ...state.lists,
+                    {id: uuid(), text: action.payload, tasks: []}
+                ]
+            }
+        }
+        case "ADD_TASK": {
+            return {
+                ...state
+            }
+        }
+        default: {
+            return state
+        }
+    }
+}
+
+export const AppStateProvider = ({children}: React.PropsWithChildren<{}>) => {
+
+    const [state, dispatch] = useReducer(appStateReducer, appData)
+
+    return <AppStateContext.Provider value={{state, dispatch}}>{children}</AppStateContext.Provider>
+}
+
+export const useAppState = () => {
+    return useContext(AppStateContext)
 }
